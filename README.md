@@ -1,4 +1,4 @@
-osm-cgn-bounds
-==============
+osm-cgn-bounds: Administrative Grenzen der Stadt Köln für OpenStreetmap
+=======================================================================
 
-Importing administrative boundaries for Cologne, Germany to the OpenStreetmap Project
+Hier werden Scripte für den Import von Shape-Daten und zur Ermittlung von Statistiken zu diesem Import gesammelt.
