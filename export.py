@@ -31,8 +31,7 @@ import os
 import sys
 import shapefile
 import pyproj
-
-FILES = [config.STADTBEZIRKE, config.STADTTEILE]
+import json
 
 
 def convert_point_coords(p):
@@ -60,10 +59,10 @@ def read_shapes(path, level, points, shapes):
         stadtteil = None
         stadtbezirk = None
         if level == 'STADTTEIL':
-            stadtteil = shape_records.record[2]
-            stadtbezirk = shape_records.record[5]
+            stadtteil = shape_records.record[2].decode('latin1')
+            stadtbezirk = shape_records.record[5].decode('latin1')
         else:
-            stadtbezirk = shape_records.record[2]
+            stadtbezirk = shape_records.record[2].decode('latin1')
         # store shape
         shape_id = level + '_' + str(n)
         if stadtteil is not None:
@@ -308,6 +307,28 @@ def draw_ways_svg(ways, points, outfile):
     svg.write('</svg>' + "\n")
 
 
+def export_json(points, shapes):
+    """
+    Exportiert die Shape-Informationen als JSON-Datei
+    mit Lat/Long Punktkoordinaten. Jeder Shape ist darin
+    unabhängig von jedem anderen.
+    """
+    output = {}
+    for shape_id in shapes:
+        points = []
+        for point in shapes[shape_id]['points']:
+            pstrings = point.split('|')
+            points.append((float(pstrings[0]), float(pstrings[1])))
+        output[shape_id] = {
+            'stadtteil': shapes[shape_id]['stadtteil'],
+            'stadtbezirk': shapes[shape_id]['stadtbezirk'],
+            'points': points
+        }
+    j = open('shapes.json', 'w')
+    j.write(json.dumps(output, indent=2))
+    j.close()
+
+
 if __name__ == '__main__':
     source_proj = pyproj.Proj(config.PROJECTION)
     points = {}
@@ -316,6 +337,8 @@ if __name__ == '__main__':
     (points, shapes) = read_shapes(
         config.SRC + os.sep + config.STADTTEILE,
         "STADTTEIL", points, shapes)
+    export_json(points, shapes)
+    sys.exit()
     ways = make_ways(points, shapes, ways)
     print len(points), "Punkte"
     ways = iterate_merge_ways(ways, points)
